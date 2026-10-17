@@ -90,7 +90,7 @@
 
     <div class="app-container">
         
-        <!-- GİRİŞ EKRANI (SADECE GERÇEK KULLANICI KAYDI) -->
+        <!-- GİRİŞ EKRANI -->
         <div id="loginScreen">
             <div style="margin-bottom: 25px;">
                 <i class="fa-solid fa-user-check" style="font-size: 60px; color: var(--accent-green); margin-bottom: 15px;"></i>
@@ -103,7 +103,7 @@
             </div>
         </div>
 
-        <!-- KULLANICI ARAMA SAYFASI (GERÇEK KULLANICILARI BULMA) -->
+        <!-- KULLANICI ARAMA SAYFASI -->
         <div id="searchModal" class="fullscreen-modal">
             <div class="modal-header">
                 <i class="fa-solid fa-arrow-left" onclick="closeModal('searchModal')"></i>
@@ -199,17 +199,15 @@
                 loginScreen.style.display = 'flex';
             } else {
                 loginScreen.style.display = 'none';
-                // Kullanıcı her açılışta veritabanında gerçek olarak kayıtlı tutulur
                 registerUserToDatabase(userData.username);
                 listenMessages();
             }
         }
 
-        // GERÇEK KULLANICIYI VERİTABANINA KAYDETME (SAHTE İÇERİK YOK)
         async function registerRealUser() {
             const input = document.getElementById('usernameInput').value.trim();
             if (!input) { alert("Lütfen geçerli bir kullanıcı adı girin!"); return; }
-            let finalName = input.startsWith('@' ) ? input : '@' + input;
+            let finalName = input.startsWith('@') ? input : '@' + input;
 
             userData = {
                 username: finalName,
@@ -232,7 +230,6 @@
             } catch (err) {}
         }
 
-        // GERÇEK KULLANICI ARAMA MOTORU
         async function searchRealUsers(query) {
             const list = document.getElementById('searchResultsList');
             if (!query || query.trim().length === 0) {
@@ -350,4 +347,7 @@
                 peerConnection.ontrack = event => { document.getElementById('remoteVideo').srcObject = event.streams[0]; };
                 peerConnection.onicecandidate = event => {
                     if (event.candidate) {
-         
+                        db.collection("talktok_real_calls").add({ candidate: event.candidate.toJSON(), createdAt: firebase.firestore.FieldValue.serverTimestamp() });
+                    }
+                };
+                const offer = await peerConnection.createOffer
