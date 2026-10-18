@@ -3,362 +3,285 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>PaperWorld - Altın & Mağaza Sistemi</title>
+    <title>AwasBey Windows Desktop OS</title>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
-    <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-firestore-compat.js"></script>
     <style>
-        :root {
-            --bg-color: #0b141a;
-            --panel-bg: #111b21;
-            --accent: #00a884;
-            --gold: #f39c12;
-            --text: #e9edef;
-            --text-muted: #8696a0;
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            user-select: none;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
         }
 
-        * { margin: 0; padding: 0; box-sizing: border-box; user-select: none; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
-        body, html { width: 100%; height: 100%; overflow: hidden; background-color: var(--bg-color); color: var(--text); }
+        body, html {
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            background: #0f172a;
+        }
 
-        .screen { position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: flex; flex-direction: column; justify-content: center; align-items: center; z-index: 10; background: var(--bg-color); }
-        .hidden { display: none !important; }
+        .desktop {
+            width: 100vw;
+            height: calc(100vh - 48px);
+            background: linear-gradient(135deg, #0f172a 0%, #1e1b4b 50%, #311042 100%);
+            position: relative;
+            padding: 20px;
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
+            grid-template-rows: repeat(auto-fill, minmax(90px, 1fr));
+            gap: 15px;
+            align-content: start;
+        }
 
-        .menu-card { background: var(--panel-bg); border: 1px solid #2a3942; padding: 25px; border-radius: 16px; width: 340px; text-align: center; box-shadow: 0 15px 35px rgba(0,0,0,0.6); }
-        .menu-card h1 { font-size: 24px; font-weight: bold; color: var(--accent); margin-bottom: 5px; }
-        .gold-display { font-size: 16px; color: var(--gold); font-weight: bold; margin-bottom: 15px; display: flex; align-items: center; justify-content: center; gap: 6px; }
+        .watermark {
+            position: absolute;
+            bottom: 20px;
+            right: 20px;
+            color: rgba(255, 255, 255, 0.12);
+            font-size: 28px;
+            font-weight: 900;
+            letter-spacing: 2px;
+            pointer-events: none;
+        }
 
-        .btn { width: 100%; padding: 12px; margin-top: 10px; border: none; border-radius: 8px; font-size: 14px; font-weight: bold; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; transition: transform 0.1s; }
-        .btn:active { transform: scale(0.97); }
-        .btn-primary { background: var(--accent); color: #fff; }
-        .btn-secondary { background: #2a3942; color: #fff; }
-        .btn-gold { background: var(--gold); color: #000; }
+        .icon {
+            width: 80px;
+            height: 85px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: background 0.2s;
+            text-align: center;
+        }
 
-        .input-box { width: 100%; padding: 12px; border-radius: 8px; border: 1px solid #2a3942; background: #2a3942; color: #fff; font-size: 14px; margin-bottom: 10px; outline: none; text-align: center; }
+        .icon:active {
+            background: rgba(255, 255, 255, 0.2);
+        }
 
-        /* MAĞAZA LİSTESİ */
-        .shop-grid { display: flex; flex-direction: column; gap: 8px; max-height: 180px; overflow-y: auto; margin-bottom: 15px; }
-        .shop-item { display: flex; justify-content: space-between; align-items: center; background: #1f2c34; padding: 10px; border-radius: 8px; border: 1px solid #2a3942; font-size: 13px; }
+        .icon i {
+            font-size: 32px;
+            margin-bottom: 6px;
+            filter: drop-shadow(0 4px 6px rgba(0,0,0,0.4));
+        }
 
-        #gameCanvas { display: block; background: #0b141a; cursor: crosshair; }
-        #hud { position: absolute; top: 20px; left: 20px; right: 20px; display: flex; justify-content: space-between; align-items: center; pointer-events: none; z-index: 5; }
-        .hud-panel { background: rgba(32, 44, 51, 0.9); padding: 8px 16px; border-radius: 8px; font-size: 14px; font-weight: bold; border: 1px solid #2a3942; }
+        .icon span {
+            font-size: 11px;
+            font-weight: 600;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.8);
+        }
 
-        #realUserList { position: absolute; top: 80px; right: 20px; width: 220px; background: rgba(17, 27, 33, 0.9); border-radius: 8px; padding: 12px; border: 1px solid #2a3942; pointer-events: none; }
-        #realUserList h3 { font-size: 13px; margin-bottom: 6px; color: var(--accent); border-bottom: 1px solid #2a3942; padding-bottom: 4px; }
-        .user-item { font-size: 13px; margin-bottom: 4px; color: var(--text); display: flex; justify-content: space-between; }
+        .window {
+            position: absolute;
+            top: 50px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 90vw;
+            max-width: 600px;
+            height: 60vh;
+            background: rgba(30, 41, 59, 0.95);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            border-radius: 12px;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.6);
+            backdrop-filter: blur(10px);
+            display: none;
+            flex-direction: column;
+            z-index: 100;
+            overflow: hidden;
+        }
+
+        .window-header {
+            background: rgba(15, 23, 42, 0.9);
+            padding: 10px 14px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            color: white;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+        }
+
+        .window-title {
+            font-size: 13px;
+            font-weight: 700;
+            color: #38bdf8;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .window-controls i {
+            cursor: pointer;
+            font-size: 14px;
+            color: #94a3b8;
+        }
+
+        .window-body {
+            flex: 1;
+            padding: 16px;
+            color: #f8fafc;
+            overflow-y: auto;
+            font-size: 14px;
+        }
+
+        .taskbar {
+            width: 100vw;
+            height: 48px;
+            background: rgba(15, 23, 42, 0.95);
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 12px;
+            backdrop-filter: blur(10px);
+            z-index: 200;
+        }
+
+        .start-btn {
+            background: linear-gradient(135deg, #6366f1, #a855f7);
+            color: white;
+            border: none;
+            padding: 8px 14px;
+            border-radius: 8px;
+            font-weight: 700;
+            font-size: 13px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            cursor: pointer;
+        }
+
+        .taskbar-clock {
+            color: #cbd5e1;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .status-card {
+            background: rgba(255,255,255,0.05);
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .btn {
+            background: #38bdf8;
+            color: #0f172a;
+            border: none;
+            padding: 10px 14px;
+            border-radius: 8px;
+            font-weight: 700;
+            cursor: pointer;
+            width: 100%;
+            margin-top: 10px;
+        }
     </style>
 </head>
 <body>
 
-    <!-- ANA GİRİŞ EKRANI -->
-    <div id="loginScreen" class="screen">
-        <div class="menu-card">
-            <h1>PaperWorld.io</h1>
-            <div class="gold-display"><i class="fa-solid fa-coins"></i> <span id="menuGold">0</span> Altın</div>
-            
-            <input type="text" id="usernameInput" class="input-box" placeholder="Kullanıcı Adı (@ornek)">
-            <button class="btn btn-primary" onclick="playSound('click'); startMode('online')"><i class="fa-solid fa-users"></i> Gerçek Kullanıcılarla Başla</button>
-            <button class="btn btn-secondary" onclick="playSound('click'); startMode('bot')"><i class="fa-solid fa-robot"></i> YZ Botlarına Karşı VS At</button>
-            <button class="btn btn-gold" onclick="playSound('click'); openShop()"><i class="fa-solid fa-store"></i> Karakter Mağazası</button>
+    <div class="desktop">
+        <div class="watermark">By: AwasBey</div>
+
+        <div class="icon" onclick="openWindow('pcWindow')">
+            <i class="fa-solid fa-desktop" style="color: #38bdf8;"></i>
+            <span>Bilgisayarım</span>
+        </div>
+
+        <div class="icon" onclick="openWindow('notesWindow')">
+            <i class="fa-solid fa-file-lines" style="color: #4ade80;"></i>
+            <span>Not Defteri</span>
         </div>
     </div>
 
-    <!-- MAĞAZA EKRANI -->
-    <div id="shopScreen" class="screen hidden">
-        <div class="menu-card">
-            <h1>Karakter Mağazası</h1>
-            <div class="gold-display"><i class="fa-solid fa-coins"></i> <span id="shopGold">0</span> Altın</div>
-            
-            <div class="shop-grid" id="shopItemsContainer">
-                <!-- Mağaza Öğeleri -->
+    <div id="pcWindow" class="window">
+        <div class="window-header">
+            <div class="window-title"><i class="fa-solid fa-desktop"></i> PC Durumu - [By: AwasBey]</div>
+            <div class="window-controls"><i class="fa-solid fa-xmark" onclick="closeWindow('pcWindow')"></i></div>
+        </div>
+        <div class="window-body">
+            <div class="status-card">
+                <span><i class="fa-solid fa-network-wired"></i> PC Köprü Bağlantısı:</span>
+                <strong id="pcStatus" style="color: #ef4444;">Kontrol Ediliyor...</strong>
             </div>
 
-            <button class="btn btn-secondary" onclick="playSound('click'); closeShop()">Geri Dön</button>
+            <button class="btn" onclick="checkPCConnection()">PC Bağlantısını Sına</button>
+
+            <div id="drivesBox" style="margin-top: 15px;"></div>
         </div>
     </div>
 
-    <!-- OYUN ARAYÜZÜ -->
-    <div id="hud" class="hidden">
-        <div class="hud-panel">Alan: <span id="scoreText">0</span>% | <i class="fa-solid fa-coins" style="color:var(--gold)"></i> <span id="gameGold">0</span></div>
-        <div class="hud-panel" id="modeIndicator">Mod: Yükleniyor...</div>
+    <div id="notesWindow" class="window">
+        <div class="window-header">
+            <div class="window-title"><i class="fa-solid fa-file-lines"></i> Not Defteri - By: AwasBey</div>
+            <div class="window-controls"><i class="fa-solid fa-xmark" onclick="closeWindow('notesWindow')"></i></div>
+        </div>
+        <div class="window-body">
+            <textarea style="width:100%; height:100%; background:transparent; color:white; border:none; outline:none; resize:none;" placeholder="AwasBey Not Paneli..."></textarea>
+        </div>
     </div>
 
-    <div id="realUserList" class="hidden">
-        <h3>ARENA KATILIMCILARI</h3>
-        <div id="activeUsersContainer">Yükleniyor...</div>
+    <div class="taskbar">
+        <button class="start-btn" onclick="openWindow('pcWindow')">
+            <i class="fa-brands fa-windows"></i> Başlat
+        </button>
+        <div class="taskbar-clock" id="clock">00:00</div>
     </div>
-
-    <canvas id="gameCanvas"></canvas>
 
     <script>
-        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-        function playSound(type) {
-            if (audioCtx.state === 'suspended') { audioCtx.resume(); }
-            const osc = audioCtx.createOscillator();
-            const gainNode = audioCtx.createGain();
-            osc.connect(gainNode);
-            gainNode.connect(audioCtx.destination);
-            if (type === 'click') {
-                osc.frequency.setValueAtTime(400, audioCtx.currentTime);
-                osc.frequency.exponentialRampToValueAtTime(800, audioCtx.currentTime + 0.08);
-                gainNode.gain.setValueAtTime(0.1, audioCtx.currentTime);
-                gainNode.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.08);
-                osc.start(); osc.stop(audioCtx.currentTime + 0.08);
-            } else if (type === 'coin') {
-                osc.frequency.setValueAtTime(880, audioCtx.currentTime);
-                osc.frequency.setValueAtTime(1320, audioCtx.currentTime + 0.08);
-                gainNode.gain.setValueAtTime(0.15, audioCtx.currentTime);
-                gainNode.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.2);
-                osc.start(); osc.stop(audioCtx.currentTime + 0.2);
-            }
-        }
+        function openWindow(id) { document.getElementById(id).style.display = 'flex'; }
+        function closeWindow(id) { document.getElementById(id).style.display = 'none'; }
 
-        const firebaseConfig = {
-            apiKey: "AIzaSyD_RealUserTalkTok99",
-            authDomain: "talktok-realusers.firebaseapp.com",
-            projectId: "talktok-realusers",
-            storageBucket: "talktok-realusers.appspot.com",
-            messagingSenderId: "123456789",
-            appId: "1:123:web:abc"
-        };
-        if (!firebase.apps.length) { firebase.initializeApp(firebaseConfig); }
-        const db = firebase.firestore();
+        async function checkPCConnection() {
+            const statusEl = document.getElementById('pcStatus');
+            statusEl.innerText = "Bağlanıyor...";
+            statusEl.style.color = "#eab308";
 
-        let myUsername = localStorage.getItem('paper_real_user') || null;
-        let myGold = parseInt(localStorage.getItem('paper_gold')) || 100; // Başlangıç hediyesi 100 altın
-        let currentSkin = localStorage.getItem('paper_skin') || '#00a884';
-        let ownedSkins = JSON.parse(localStorage.getItem('paper_owned')) || ['#00a884'];
-
-        let shopSkins = [
-            { name: 'Klasik Yeşil', color: '#00a884', price: 0 },
-            { name: 'Cyber Kırmızı', color: '#ea4335', price: 50 },
-            { name: 'Altın Sarısı', color: '#fbbc05', price: 100 },
-            { name: 'Neon Mavi', color: '#4285f4', price: 150 },
-            { name: 'Mor Efsane', color: '#a855f7', price: 250 }
-        ];
-
-        updateGoldUI();
-
-        function updateGoldUI() {
-            document.getElementById('menuGold').innerText = myGold;
-            document.getElementById('shopGold').innerText = myGold;
-            localStorage.setItem('paper_gold', myGold);
-        }
-
-        function openShop() {
-            document.getElementById('loginScreen').classList.add('hidden');
-            document.getElementById('shopScreen').classList.remove('hidden');
-            renderShop();
-        }
-
-        function closeShop() {
-            document.getElementById('shopScreen').classList.add('hidden');
-            document.getElementById('loginScreen').classList.remove('hidden');
-        }
-
-        function renderShop() {
-            let html = "";
-            shopSkins.forEach(s => {
-                let isOwned = ownedSkins.includes(s.color);
-                let isSelected = (currentSkin === s.color);
-                html += `
-                    <div class="shop-item">
-                        <div style="display:flex; align-items:center; gap:8px;">
-                            <div style="width:16px; height:16px; background:${s.color}; border-radius:50%;"></div>
-                            <span>${s.name}</span>
-                        </div>
-                        <div>
-                            ${isOwned ? 
-                                `<button class="btn" style="padding:4px 10px; background:${isSelected?'#27ae60':'#2a3942'}; color:#fff;" onclick="selectSkin('${s.color}')">${isSelected?'Seçili':'Kullan'}</button>` :
-                                `<button class="btn btn-gold" style="padding:4px 10px;" onclick="buySkin('${s.color}', ${s.price})">${s.price} <i class="fa-solid fa-coins"></i></button>`
-                            }
-                        </div>
-                    </div>
-                `;
-            });
-            document.getElementById('shopItemsContainer').innerHTML = html;
-        }
-
-        function buySkin(color, price) {
-            if (myGold >= price) {
-                myGold -= price;
-                ownedSkins.push(color);
-                currentSkin = color;
-                localStorage.setItem('paper_owned', JSON.stringify(ownedSkins));
-                localStorage.setItem('paper_skin', currentSkin);
-                updateGoldUI();
-                renderShop();
-                playSound('coin');
-            } else {
-                alert("Yeterli altının yok! Oyunda süre geçirerek altın kazanabilirsin.");
-            }
-        }
-
-        function selectSkin(color) {
-            currentSkin = color;
-            localStorage.setItem('paper_skin', currentSkin);
-            renderShop();
-            playSound('click');
-        }
-
-        let playMode = 'online';
-        const canvas = document.getElementById('gameCanvas');
-        const ctx = canvas.getContext('2d');
-        canvas.width = window.innerWidth;
-        canvas.height = window.innerHeight;
-
-        let gameActive = false;
-        let player = { x: canvas.width / 2, y: canvas.height / 2, size: 14, speed: 4, angle: 0, trail: [] };
-        let aiBots = [];
-        let animCounter = 0;
-
-        if (myUsername) { document.getElementById('usernameInput').value = myUsername; }
-
-        async function startMode(mode) {
-            let input = document.getElementById('usernameInput').value.trim();
-            if (!input) { alert("Lütfen bir kullanıcı adı girin!"); return; }
-            myUsername = input.startsWith('@') ? input : '@' + input;
-            playMode = mode;
-            localStorage.setItem('paper_real_user', myUsername);
-
-            if (playMode === 'online') {
-                document.getElementById('modeIndicator').innerText = "Mod: Gerçek Kullanıcılar";
-                await db.collection("paper_real_players").doc(myUsername).set({
-                    username: myUsername,
-                    lastActive: firebase.firestore.FieldValue.serverTimestamp()
-                }, { merge: true });
-                listenRealUsers();
-            } else {
-                document.getElementById('modeIndicator').innerText = "Mod: YZ Botlarına Karşı";
-                aiBots = [
-                    { name: "🤖 Bot_Alpha", x: Math.random()*canvas.width, y: Math.random()*canvas.height, dx: 2, dy: 1.5, color: '#ea4335' },
-                    { name: "🤖 Bot_Beta", x: Math.random()*canvas.width, y: Math.random()*canvas.height, dx: -1.5, dy: 2, color: '#fbbc05' }
-                ];
-                renderBotList();
-            }
-
-            document.getElementById('loginScreen').classList.add('hidden');
-            document.getElementById('hud').classList.remove('hidden');
-            document.getElementById('realUserList').classList.remove('hidden');
-
-            gameActive = true;
-            requestAnimationFrame(gameLoop);
-
-            // Her 10 saniyede bir aktif oynayarak altın kazanma
-            setInterval(() => {
-                if (gameActive) {
-                    myGold += 5;
-                    updateGoldUI();
-                    playSound('coin');
+            try {
+                const res = await fetch('http://localhost:8080/ping');
+                const data = await res.json();
+                if (data.online) {
+                    statusEl.innerText = "Online (Bağlandı)";
+                    statusEl.style.color = "#22c55e";
+                    getDrives();
                 }
-            }, 10000);
+            } catch (err) {
+                statusEl.innerText = "Offline (PC Servisi Kapalı)";
+                statusEl.style.color = "#ef4444";
+            }
         }
 
-        window.addEventListener('mousemove', e => {
-            if (!gameActive) return;
-            let dx = e.clientX - player.x;
-            let dy = e.clientY - player.y;
-            player.angle = Math.atan2(dy, dx);
-        });
-
-        function gameLoop() {
-            if (!gameActive) return;
-            animCounter++;
-            player.x += Math.cos(player.angle) * player.speed;
-            player.y += Math.sin(player.angle) * player.speed;
-            player.x = Math.max(20, Math.min(canvas.width - 20, player.x));
-            player.y = Math.max(20, Math.min(canvas.height - 20, player.y));
-
-            if (animCounter % 3 === 0) {
-                player.trail.push({ x: player.x, y: player.y });
-                if (player.trail.length > 35) player.trail.shift();
-            }
-
-            if (playMode === 'bot') {
-                aiBots.forEach(b => {
-                    b.x += b.dx; b.y += b.dy;
-                    if (b.x < 30 || b.x > canvas.width - 30) b.dx *= -1;
-                    if (b.y < 30 || b.y > canvas.height - 30) b.dy *= -1;
+        async function getDrives() {
+            try {
+                const res = await fetch('http://localhost:8080/get-drives');
+                const drives = await res.json();
+                let html = '<p style="margin-bottom:8px; font-weight:bold;">Gerçek Sürücüler:</p>';
+                drives.forEach(d => {
+                    html += `<div class="status-card">
+                        <span><i class="fa-solid fa-hard-drive"></i> ${d.name}</span>
+                        <small>Boş: ${d.freeGB} GB / Toplam: ${d.totalGB} GB</small>
+                    </div>`;
                 });
-            }
-
-            draw();
-            requestAnimationFrame(gameLoop);
+                document.getElementById('drivesBox').innerHTML = html;
+            } catch(e){}
         }
 
-        function draw() {
-            ctx.fillStyle = '#0b141a';
-            ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-            ctx.strokeStyle = '#111b21';
-            ctx.lineWidth = 1;
-            let offset = (animCounter * 0.5) % 40;
-            for (let x = offset; x < canvas.width; x += 40) {
-                ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, canvas.height); ctx.stroke();
-            }
-            for (let y = offset; y < canvas.height; y += 40) {
-                ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(canvas.width, y); ctx.stroke();
-            }
-
-            if (player.trail.length > 1) {
-                ctx.strokeStyle = currentSkin;
-                ctx.lineWidth = 4;
-                ctx.beginPath();
-                player.trail.forEach((pt, idx) => {
-                    if (idx === 0) ctx.moveTo(pt.x, pt.y);
-                    else ctx.lineTo(pt.x, pt.y);
-                });
-                ctx.stroke();
-            }
-
-            ctx.fillStyle = currentSkin;
-            ctx.beginPath();
-            ctx.arc(player.x, player.y, player.size, 0, Math.PI * 2);
-            ctx.fill();
-            ctx.strokeStyle = '#fff';
-            ctx.lineWidth = 2;
-            ctx.stroke();
-
-            if (playMode === 'bot') {
-                aiBots.forEach(b => {
-                    ctx.fillStyle = b.color;
-                    ctx.beginPath();
-                    ctx.arc(b.x, b.y, 12, 0, Math.PI * 2);
-                    ctx.fill();
-                    ctx.strokeStyle = '#fff';
-                    ctx.lineWidth = 2;
-                    ctx.stroke();
-                    ctx.fillStyle = '#fff';
-                    ctx.font = '11px sans-serif';
-                    ctx.fillText(b.name, b.x - 25, b.y - 16);
-                });
-            }
+        function updateClock() {
+            const now = new Date();
+            document.getElementById('clock').innerText = String(now.getHours()).padStart(2, '0') + ':' + String(now.getMinutes()).padStart(2, '0');
         }
 
-        function listenRealUsers() {
-            db.collection("paper_real_players").onSnapshot(snapshot => {
-                let users = [];
-                snapshot.forEach(doc => users.push(doc.data()));
-                let html = "";
-                users.forEach(u => {
-                    html += `<div class="user-item"><span>${u.username}</span><span style="color: #00a884;">● Gerçek</span></div>`;
-                });
-                document.getElementById('activeUsersContainer').innerHTML = html;
-                document.getElementById('scoreText').innerText = (users.length * 4.2).toFixed(1);
-                document.getElementById('gameGold').innerText = myGold;
-            });
-        }
-
-        function renderBotList() {
-            let html = `<div class="user-item"><span>${myUsername} (Sen)</span><span style="color: #00a884;">● Oyuncu</span></div>`;
-            aiBots.forEach(b => {
-                html += `<div class="user-item"><span>${b.name}</span><span style="color: #ea4335;">● YZ Bot</span></div>`;
-            });
-            document.getElementById('activeUsersContainer').innerHTML = html;
-            document.getElementById('scoreText').innerText = "18.5";
-            document.getElementById('gameGold').innerText = myGold;
-        }
+        setInterval(updateClock, 1000);
+        updateClock();
+        checkPCConnection();
     </script>
 </body>
 </html>
-
